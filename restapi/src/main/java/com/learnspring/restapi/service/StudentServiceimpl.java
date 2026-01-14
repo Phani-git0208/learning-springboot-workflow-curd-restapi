@@ -9,6 +9,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -37,4 +38,40 @@ public class StudentServiceimpl implements StudentService {
         return modalmapper.map(student , StudentDto.class);
     }
 
+    @Override
+    public void deletestudentbyid(Long id){
+        if(!studentRepository.existsById(id)){
+            throw new IllegalArgumentException("student not found with id : "+id);
+        }
+        studentRepository.deleteById(id);
+    }
+    @Override
+    public StudentDto putstudentbyid(Long id,addStudntRequestDto addstudntrequestdto){
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("student not found with id : "+id));
+        modalmapper.map(addstudntrequestdto,student);
+
+        student = studentRepository.save(student);
+        return modalmapper.map(student, StudentDto.class);
+    }
+
+    @Override
+    public StudentDto updatePartOfStudentById(Long id, Map<String, Object> updates) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("student not found with id : "+id));
+        updates.forEach((String field, Object value) -> {
+            switch(field){
+                case "name":student.setName((String)value);
+                break;
+                case "email":student.setEmail((String)value);
+                    break;
+                case "marks": student.setMarks((int)value);
+                    break;
+                default :
+                    throw new IllegalArgumentException("invalid entry");
+            }
+        });
+        Student savedstudent= studentRepository.save(student);
+        return modalmapper.map(student, StudentDto.class);
+    }
 }
